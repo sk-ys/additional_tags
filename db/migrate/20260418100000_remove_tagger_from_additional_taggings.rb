@@ -56,6 +56,14 @@ class RemoveTaggerFromAdditionalTaggings < ActiveRecord::Migration[7.2]
           AND t1.taggable_type = t2.taggable_type
           AND t1.id > t2.id
       SQL
+    elsif Redmine::Database.sqlite?
+      <<~SQL.squish
+        DELETE FROM additional_taggings
+        WHERE id NOT IN (
+          SELECT MIN(id) FROM additional_taggings
+          GROUP BY tag_id, taggable_id, taggable_type
+        )
+      SQL
     else
       <<~SQL.squish
         DELETE t1 FROM additional_taggings t1
